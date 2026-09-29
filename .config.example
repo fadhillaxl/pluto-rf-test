@@ -33,5 +33,6 @@ duration = 0
 rx_gain = 30
 rx_channels = 1
 interval = 1.0
-duration = 0
-csv = 
+# Durasi uji default 10 detik (otomatis menampilkan rata-rata setelah selesai)
+duration = 10
+csv =  

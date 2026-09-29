@@ -156,6 +156,7 @@ def main():
     print("\nPress Ctrl+C to stop.\n")
 
     start = time.monotonic()
+    history = {1: []} if args.rx_channels == 1 else {1: [], 2: []}
     try:
         while True:
             raw = sdr.rx()
@@ -164,7 +165,7 @@ def main():
             now = datetime.now().astimezone().isoformat(timespec="seconds")
             elapsed = time.monotonic() - start
 
-            print(f"[{now}]")
+            print(f"[{now}] (detik {elapsed:4.1f})")
             for idx, ch in enumerate(samples, start=1):
                 m = measure_channel(
                     ch,
@@ -172,6 +173,7 @@ def main():
                     args.tone,
                     noise_exclusion_hz=max(10e3, 4 * args.sample_rate / args.buffer),
                 )
+                history[idx].append(m)
                 print(
                     f"  RX{idx}: "
                     f"signal={m['signal_db']:8.2f} dB  "
@@ -200,10 +202,45 @@ def main():
                 break
 
     except KeyboardInterrupt:
-        print("\nStopping RX test...")
+        print("\nStopping RX test (interrupted by user)...")
     finally:
         if csv_file:
             csv_file.close()
+
+    total_elapsed = time.monotonic() - start
+    print_summary(history, total_elapsed, args.duration)
+
+
+def print_summary(history: dict, total_elapsed: float, duration_target: float):
+    if not history or not any(history.values()):
+        print("\n[Summary] Tidak ada data pengukuran yang berhasil dicatat.")
+        return
+
+    sample_count = len(next(iter(history.values())))
+    print("\n" + "=" * 70)
+    print("               RINGKASAN HASIL RATA-RATA PENGUJIAN RF")
+    print("=" * 70)
+    target_str = f" (Target: {duration_target:.0f}s)" if duration_target > 0 else ""
+    print(f"Durasi Uji: {total_elapsed:.1f} detik{target_str} | Total Sampel: {sample_count}\n")
+
+    for ch_idx, data in sorted(history.items()):
+        if not data:
+            continue
+        sig_avg = float(np.mean([d["signal_db"] for d in data]))
+        noise_avg = float(np.mean([d["noise_db"] for d in data]))
+        snr_avg = float(np.mean([d["snr_db"] for d in data]))
+        rms_avg = float(np.mean([d["rms_dbfs"] for d in data]))
+
+        print(f"--- [ Kanal RX{ch_idx} ] ---")
+        print(f"  • Signal Power Rata-rata : {sig_avg:7.2f} dB  (min: {min(d['signal_db'] for d in data):.2f}, max: {max(d['signal_db'] for d in data):.2f})")
+        print(f"  • Noise Floor  Rata-rata : {noise_avg:7.2f} dB  (min: {min(d['noise_db'] for d in data):.2f}, max: {max(d['noise_db'] for d in data):.2f})")
+        print(f"  • SNR          Rata-rata : {snr_avg:7.2f} dB  (min: {min(d['snr_db'] for d in data):.2f}, max: {max(d['snr_db'] for d in data):.2f})")
+        print(f"  • Level ADC    Rata-rata : {rms_avg:7.2f} dBFS")
+        print()
+
+    print("=" * 70)
+    print("Nilai di atas siap disalin ke TABEL_PENGUJIAN_RF.md")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

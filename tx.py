@@ -35,7 +35,7 @@ def main():
     p.add_argument("--tx-gain", type=float, default=cfg["tx_gain"], help="TX hardware gain in dB; Pluto commonly uses negative dB")
     p.add_argument("--tone", type=float, default=cfg["tone"], help="Baseband tone offset in Hz")
     p.add_argument("--buffer", type=int, default=cfg["buffer"], help="TX buffer size")
-    p.add_argument("--duration", type=float, default=cfg["duration"], help="Seconds to transmit; 0 = continuous")
+    p.add_argument("--duration", type=float, default=cfg["tx_duration"], help="Seconds to transmit; 0 = continuous")
     args = p.parse_args()
 
     args.uri = normalize_uri(args.uri)

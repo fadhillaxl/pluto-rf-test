@@ -97,7 +97,9 @@ def load_config(custom_path: str = None) -> tuple:
         "tone": 100e3,
         "buffer": 16384,
         "tx_gain": -20.0,
-        "duration": 0.0,
+        "tx_duration": 0.0,
+        "duration": 10.0,
+        "rx_duration": 10.0,
         "rx_gain": 30.0,
         "rx_channels": 1,
         "interval": 1.0,
@@ -148,7 +150,7 @@ def load_config(custom_path: str = None) -> tuple:
                 pass
         if cfg.has_option("tx", "duration"):
             try:
-                defaults["duration"] = float(cfg.get("tx", "duration"))
+                defaults["tx_duration"] = float(cfg.get("tx", "duration"))
             except ValueError:
                 pass
 
@@ -171,7 +173,8 @@ def load_config(custom_path: str = None) -> tuple:
                 pass
         if cfg.has_option("rx", "duration"):
             try:
-                defaults["duration"] = float(cfg.get("rx", "duration"))
+                defaults["rx_duration"] = float(cfg.get("rx", "duration"))
+                defaults["duration"] = defaults["rx_duration"]
             except ValueError:
                 pass
         if cfg.has_option("rx", "csv"):
