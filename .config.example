@@ -1,0 +1,35 @@
+# ==============================================================================
+# Pluto+ SDR Configuration File Template
+# Salin file ini menjadi .config atau .comfig
+# Contoh: cp .config.example .config
+# ==============================================================================
+
+[device]
+# Pilih profil aktif: 'laptop' atau 'sbc'
+target = laptop
+
+[laptop]
+# Pluto terhubung via USB di Laptop
+uri = usb:
+
+[sbc]
+# Pluto terhubung via IP di Armbian / SBC
+uri = ip:192.168.99.240
+
+[rf]
+freq = 434000000
+bw = 1000000
+sample_rate = 2000000
+tone = 100000
+buffer = 16384
+
+[tx]
+tx_gain = -20
+duration = 0
+
+[rx]
+rx_gain = 30
+rx_channels = 1
+interval = 1.0
+duration = 0
+csv = 

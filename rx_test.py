@@ -24,6 +24,7 @@ from datetime import datetime
 
 import numpy as np
 import adi
+from rf_config import load_config, normalize_uri
 
 
 def db10(x):
@@ -88,19 +89,30 @@ def measure_channel(samples: np.ndarray, sample_rate: float, tone_hz: float,
 
 
 def main():
+    pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser.add_argument("--config", default="", help="Custom config file")
+    pre_args, _ = pre_parser.parse_known_args()
+
+    cfg, cfg_file = load_config(pre_args.config)
+
     p = argparse.ArgumentParser(description="Pluto #1 RF RX measurement tool")
-    p.add_argument("--uri", default="ip:192.168.2.10", help="Pluto URI")
-    p.add_argument("--freq", type=float, default=434e6, help="RX center frequency in Hz")
-    p.add_argument("--bw", type=float, default=1e6, help="RX RF bandwidth in Hz")
-    p.add_argument("--sample-rate", type=float, default=2e6, help="RX sample rate in Hz")
-    p.add_argument("--rx-gain", type=float, default=30, help="RX manual gain in dB")
-    p.add_argument("--rx-channels", type=int, choices=[1, 2], default=1, help="1=RX1, 2=RX1+RX2")
-    p.add_argument("--tone", type=float, default=100e3, help="Expected baseband tone offset in Hz")
-    p.add_argument("--buffer", type=int, default=16384, help="RX buffer size")
-    p.add_argument("--interval", type=float, default=1.0, help="Seconds between measurements")
-    p.add_argument("--duration", type=float, default=0, help="Seconds; 0 = until Ctrl+C")
-    p.add_argument("--csv", default="", help="Optional CSV output path")
+    p.add_argument("--config", default=pre_args.config, help="Path to config file (.config, .comfig, config.ini)")
+    p.add_argument("--uri", default=cfg["uri"], help=f"Pluto URI (default: {cfg['uri']})")
+    p.add_argument("--freq", type=float, default=cfg["freq"], help="RX center frequency in Hz")
+    p.add_argument("--bw", type=float, default=cfg["bw"], help="RX RF bandwidth in Hz")
+    p.add_argument("--sample-rate", type=float, default=cfg["sample_rate"], help="RX sample rate in Hz")
+    p.add_argument("--rx-gain", type=float, default=cfg["rx_gain"], help="RX manual gain in dB")
+    p.add_argument("--rx-channels", type=int, choices=[1, 2], default=cfg["rx_channels"], help="1=RX1, 2=RX1+RX2")
+    p.add_argument("--tone", type=float, default=cfg["tone"], help="Expected baseband tone offset in Hz")
+    p.add_argument("--buffer", type=int, default=cfg["buffer"], help="RX buffer size")
+    p.add_argument("--interval", type=float, default=cfg["interval"], help="Seconds between measurements")
+    p.add_argument("--duration", type=float, default=cfg["duration"], help="Seconds; 0 = until Ctrl+C")
+    p.add_argument("--csv", default=cfg["csv"], help="Optional CSV output path")
     args = p.parse_args()
+
+    args.uri = normalize_uri(args.uri)
+    if cfg_file:
+        print(f"[Config] Loaded settings from: {cfg_file}")
 
     if abs(args.tone) >= args.sample_rate / 2:
         raise SystemExit("--tone must be below sample-rate/2")

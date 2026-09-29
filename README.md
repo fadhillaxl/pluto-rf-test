@@ -99,19 +99,37 @@ Cek Pluto:
 iio_info -s
 ```
 
-Jika Pluto terhubung lewat USB, URI dapat berupa sesuatu seperti:
-
+Jika Pluto terhubung lewat USB (misal di Laptop):
 ```text
-usb:0
+usb:
 ```
 
-Jika lewat network:
-
+Jika lewat network (misal di Armbian / SBC):
 ```text
-ip:192.168.2.10
+ip:192.168.99.240
 ```
 
-Sesuaikan IP dengan jaringan Pluto kamu.
+### Konfigurasi Otomatis (`.config`)
+Project ini mendukung file konfigurasi `.config` (atau `.comfig` / `config.ini`) agar Anda tidak perlu mengetik `--uri` setiap saat:
+
+```bash
+# Buat file .config dari template:
+cp .config.example .config
+```
+
+Di dalam `.config`, Anda cukup menentukan target perangkat yang digunakan:
+- **Di Laptop (USB)**:
+  ```ini
+  [device]
+  target = laptop
+  ```
+- **Di Armbian / SBC (IP 192.168.99.240)**:
+  ```ini
+  [device]
+  target = sbc
+  ```
+
+Script `tx.py` dan `rx_test.py` akan otomatis membaca URI default dari `.config` tersebut tanpa perlu mengetik `--uri` lagi (namun jika argumen `--uri` di-input manual di terminal, argumen manual tetap akan menimpa config).
 
 ## 5. Jalankan transmitter — Pluto #2
 

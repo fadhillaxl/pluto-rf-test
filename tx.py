@@ -10,6 +10,7 @@ import argparse
 import time
 import numpy as np
 import adi
+from rf_config import load_config, normalize_uri
 
 
 def tone_iq(sample_rate: float, tone_hz: float, n: int) -> np.ndarray:
@@ -19,16 +20,27 @@ def tone_iq(sample_rate: float, tone_hz: float, n: int) -> np.ndarray:
 
 
 def main():
+    pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser.add_argument("--config", default="", help="Custom config file")
+    pre_args, _ = pre_parser.parse_known_args()
+
+    cfg, cfg_file = load_config(pre_args.config)
+
     p = argparse.ArgumentParser(description="Pluto #2 RF test transmitter")
-    p.add_argument("--uri", default="ip:192.168.2.11", help="Pluto URI, e.g. ip:192.168.2.11 or usb:0")
-    p.add_argument("--freq", type=float, default=434e6, help="TX center frequency in Hz")
-    p.add_argument("--bw", type=float, default=1e6, help="TX RF bandwidth in Hz")
-    p.add_argument("--sample-rate", type=float, default=2e6, help="TX sample rate in Hz")
-    p.add_argument("--tx-gain", type=float, default=-20, help="TX hardware gain in dB; Pluto commonly uses negative dB")
-    p.add_argument("--tone", type=float, default=100e3, help="Baseband tone offset in Hz")
-    p.add_argument("--buffer", type=int, default=16384, help="TX buffer size")
-    p.add_argument("--duration", type=float, default=0, help="Seconds to transmit; 0 = continuous")
+    p.add_argument("--config", default=pre_args.config, help="Path to config file (.config, .comfig, config.ini)")
+    p.add_argument("--uri", default=cfg["uri"], help=f"Pluto URI (default: {cfg['uri']})")
+    p.add_argument("--freq", type=float, default=cfg["freq"], help="TX center frequency in Hz")
+    p.add_argument("--bw", type=float, default=cfg["bw"], help="TX RF bandwidth in Hz")
+    p.add_argument("--sample-rate", type=float, default=cfg["sample_rate"], help="TX sample rate in Hz")
+    p.add_argument("--tx-gain", type=float, default=cfg["tx_gain"], help="TX hardware gain in dB; Pluto commonly uses negative dB")
+    p.add_argument("--tone", type=float, default=cfg["tone"], help="Baseband tone offset in Hz")
+    p.add_argument("--buffer", type=int, default=cfg["buffer"], help="TX buffer size")
+    p.add_argument("--duration", type=float, default=cfg["duration"], help="Seconds to transmit; 0 = continuous")
     args = p.parse_args()
+
+    args.uri = normalize_uri(args.uri)
+    if cfg_file:
+        print(f"[Config] Loaded settings from: {cfg_file}")
 
     if abs(args.tone) >= args.sample_rate / 2:
         raise SystemExit("--tone must be below sample-rate/2")

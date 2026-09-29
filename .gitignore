@@ -29,8 +29,15 @@ wheels/
 # Measurement data / CSVs
 *.csv
 
+# Local configuration
+.config
+.comfig
+config.ini
+!.config.example
+
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 ._*
+
