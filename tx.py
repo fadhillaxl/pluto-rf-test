@@ -51,10 +51,10 @@ def main():
     except Exception:
         sdr = adi.Pluto(args.uri)
 
+    sdr.sample_rate = int(args.sample_rate)
     sdr.tx_enabled_channels = [0]
     sdr.tx_lo = int(args.freq)
     sdr.tx_rf_bandwidth = int(args.bw)
-    sdr.tx_sample_rate = int(args.sample_rate)
     sdr.tx_hardwaregain_chan0 = args.tx_gain
     sdr.tx_cyclic_buffer = True
     sdr.tx_buffer_size = args.buffer

@@ -123,10 +123,10 @@ def main():
     except Exception:
         sdr = adi.Pluto(args.uri)
 
+    sdr.sample_rate = int(args.sample_rate)
     sdr.rx_enabled_channels = [0] if args.rx_channels == 1 else [0, 1]
     sdr.rx_lo = int(args.freq)
     sdr.rx_rf_bandwidth = int(args.bw)
-    sdr.rx_sample_rate = int(args.sample_rate)
     sdr.gain_control_mode_chan0 = "manual"
     sdr.rx_hardwaregain_chan0 = args.rx_gain
     if args.rx_channels == 2:
