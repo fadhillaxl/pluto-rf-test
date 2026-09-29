@@ -9,7 +9,9 @@
 target = laptop
 
 [laptop]
-# Pluto terhubung via USB di Laptop
+# Pluto terhubung via USB di Laptop:
+# - uri = usb:            (Direct USB libusb)
+# - uri = ip:192.168.2.10 (USB Virtual Ethernet)
 uri = usb:
 
 [sbc]

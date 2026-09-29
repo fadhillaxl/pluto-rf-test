@@ -14,6 +14,10 @@ def normalize_uri(uri: str) -> str:
     uri = uri.strip()
     if not uri:
         return "usb:"
+    # If user provided macOS /dev/tty.usbmodem... or usb:/dev/tty...
+    # Pluto via USB uses libiio 'usb:' or USB-Ethernet 'ip:192.168.2.10'
+    if "/dev/tty" in uri or "usbmodem" in uri:
+        return "ip:192.168.2.10"
     # If raw IP without 'ip:' prefix (e.g., 192.168.99.240 or 192.168.99.240:1234)
     if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$", uri):
         return f"ip:{uri}"
