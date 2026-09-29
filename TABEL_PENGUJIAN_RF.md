@@ -61,7 +61,7 @@ Gunakan tabel berikut untuk merangkum nilai rata-rata dari masing-masing sesi pe
 | No | Skenario Pengujian | Konfigurasi LNA | Kanal | Signal Level (`signal_db`) | Noise Floor (`noise_db`) | SNR (`snr_db`) | Level ADC (`rms_dbfs`) | Δ SNR vs Baseline | Status / Kualitas Sinyal |
 |:--:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1** | **SISO Tanpa SPF** *(Baseline)* | TX: OFF<br>RX: OFF | **RX1** | **51.26 dB** | **39.55 dB** | **11.72 dB** | **2.00 dBFS** | `0.00 dB` *(Ref)* | ☑ Baik  ☐ Lemah |
-| **2** | **SISO dengan SPF (TX + RX)** | TX: ON (SPF1)<br>RX1: ON (SPF2) | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
+| **2** | **SISO dengan SPF (TX + RX)** | TX: ON (SPF1)<br>RX1: ON (SPF2) | **RX1** | **78.01 dB** | **45.80 dB** | **32.21 dB** | **14.35 dBFS** | **+20.49 dB** | ☑ Sangat Baik  ☐ Overload |
 | **3** | **MIMO / SIMO Tanpa SPF** | TX: OFF<br>RX: OFF | **RX1** | **51.29 dB** | **39.45 dB** | **11.84 dB** | **1.86 dBFS** | `+0.12 dB` | ☑ Baik  ☐ Lemah |
 | | | | **RX2** | **54.26 dB** | **39.73 dB** | **14.53 dB** | **2.34 dBFS** | `+2.81 dB` | ☑ Baik  ☐ Lemah |
 | **4** | **MIMO / SIMO dengan SPF (RX1 + RX2)** | TX: OFF<br>RX1: ON (SPF1)<br>RX2: ON (SPF2) | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
@@ -88,16 +88,16 @@ Catat setiap percobaan (minimal 3 kali pengulangan) untuk mengantisipasi deviasi
 ---
 
 ### Pengujian 2: SISO dengan SPF5189Z (TX + RX)
-- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-10 dB` (atau kurangi jika saturasi), RX Gain: `30 dB`
+- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-10 dB`, RX Gain: `30 dB`
 - **Output CSV**: `T2_siso_spf_tx_rx.csv`
 - **Metode**: Pasang SPF1 di TX & SPF2 di RX1, lalu jalankan `python auto_test.py --scenario 2 --duration 10`
 
 | Run | Timestamp | Signal (dB) | Noise (dB) | SNR (dB) | RMS (dBFS) | Peak Offset (kHz) | Catatan Kondisi |
 |:---:|:---|:---:|:---:|:---:|:---:|:---:|---|
-| #1 | | | | | | | |
-| #2 | | | | | | | |
-| #3 | | | | | | | |
-| **Rata-rata** | | | | | | | |
+| #1 | 2026-09-29T22:02:39 | 77.78 | 46.05 | 31.73 | 14.32 | 101.20 | Lock stabil 100 kHz tone |
+| #2 | 2026-09-29T22:02:44 | 78.45 | 45.78 | 32.66 | 14.65 | 101.32 | Gain ganda TX+RX bekerja |
+| #3 | 2026-09-29T22:02:49 | 77.92 | 45.97 | 31.95 | 14.48 | 101.20 | Penguatan konsisten |
+| **Rata-rata (11 Sampel)** | **Durasi 10 detik** | **78.01** | **45.80** | **32.21** | **14.35** | **101.20** | **Δ SNR = +20.49 dB vs Baseline!** |
 
 ---
 
