@@ -23,8 +23,8 @@ import time
 from datetime import datetime
 
 import numpy as np
-import adi
 from rf_config import load_config, normalize_uri
+import adi
 
 
 def db10(x):

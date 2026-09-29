@@ -6,7 +6,45 @@ Helper for loading SDR and RF test configurations from .config, .comfig, or conf
 import configparser
 import os
 import re
+import sys
 from pathlib import Path
+
+
+def auto_patch_iio():
+    """
+    Auto-patches iio.py in the current environment if running on an OS with an older
+    system libiio (such as Ubuntu 20.04 / Focal) where 'iio_device_get_label' symbol
+    does not exist in /usr/lib/.../libiio.so.0.
+    """
+    for p in sys.path:
+        candidate = Path(p) / "iio.py"
+        if candidate.is_file():
+            try:
+                content = candidate.read_text(encoding="utf-8")
+                target = (
+                    "_d_get_label = _lib.iio_device_get_label\n"
+                    "_d_get_label.restype = c_char_p\n"
+                    "_d_get_label.argtypes = (_DevicePtr,)"
+                )
+                replacement = (
+                    "try:\n"
+                    "    _d_get_label = _lib.iio_device_get_label\n"
+                    "    _d_get_label.restype = c_char_p\n"
+                    "    _d_get_label.argtypes = (_DevicePtr,)\n"
+                    "except AttributeError:\n"
+                    "    _d_get_label = lambda dev: None"
+                )
+                if target in content:
+                    candidate.write_text(content.replace(target, replacement), encoding="utf-8")
+                    print(f"[Compat] Applied compatibility fix to {candidate} (libiio older symbol patch)")
+            except Exception:
+                pass
+            break
+
+
+# Run auto-patch before any other code imports adi/iio
+auto_patch_iio()
+
 
 
 def normalize_uri(uri: str) -> str:

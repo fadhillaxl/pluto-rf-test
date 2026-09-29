@@ -9,8 +9,8 @@ Example:
 import argparse
 import time
 import numpy as np
-import adi
 from rf_config import load_config, normalize_uri
+import adi
 
 
 def tone_iq(sample_rate: float, tone_hz: float, n: int) -> np.ndarray:
