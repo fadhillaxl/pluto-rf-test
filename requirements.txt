@@ -1,2 +1,2 @@
-numpy>=1.26
+numpy
 pyadi-iio>=0.0.19
