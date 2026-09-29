@@ -60,11 +60,11 @@ Gunakan tabel berikut untuk merangkum nilai rata-rata dari masing-masing sesi pe
 
 | No | Skenario Pengujian | Konfigurasi LNA | Kanal | Signal Level (`signal_db`) | Noise Floor (`noise_db`) | SNR (`snr_db`) | Level ADC (`rms_dbfs`) | Δ SNR vs Baseline | Status / Kualitas Sinyal |
 |:--:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1** | **SISO Tanpa SPF** *(Baseline)* | TX: OFF<br>RX: OFF | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | `0.00 dB` *(Ref)* | ☐ Baik  ☐ Lemah |
+| **1** | **SISO Tanpa SPF** *(Baseline)* | TX: OFF<br>RX: OFF | **RX1** | **51.26 dB** | **39.55 dB** | **11.72 dB** | **2.00 dBFS** | `0.00 dB` *(Ref)* | ☑ Baik  ☐ Lemah |
 | **2** | **SISO dengan SPF (TX + RX)** | TX: ON (SPF1)<br>RX1: ON (SPF2) | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
-| **3** | **MIMO Tanpa SPF** | TX: OFF<br>RX: OFF | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Lemah |
-| | | | **RX2** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Lemah |
-| **4** | **MIMO dengan SPF (RX1 + RX2)** | TX: OFF<br>RX1: ON (SPF1)<br>RX2: ON (SPF2) | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
+| **3** | **MIMO / SIMO Tanpa SPF** | TX: OFF<br>RX: OFF | **RX1** | **51.29 dB** | **39.45 dB** | **11.84 dB** | **1.86 dBFS** | `+0.12 dB` | ☑ Baik  ☐ Lemah |
+| | | | **RX2** | **54.26 dB** | **39.73 dB** | **14.53 dB** | **2.34 dBFS** | `+2.81 dB` | ☑ Baik  ☐ Lemah |
+| **4** | **MIMO / SIMO dengan SPF (RX1 + RX2)** | TX: OFF<br>RX1: ON (SPF1)<br>RX2: ON (SPF2) | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
 | | | | **RX2** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
 
 ---
@@ -74,21 +74,23 @@ Gunakan tabel berikut untuk merangkum nilai rata-rata dari masing-masing sesi pe
 Catat setiap percobaan (minimal 3 kali pengulangan) untuk mengantisipasi deviasi fluktuasi sinyal:
 
 ### Pengujian 1: SISO Tanpa SPF5189Z
-- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-20 dB`, RX Gain: `30 dB`
+- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-10 dB`, RX Gain: `30 dB`
 - **Output CSV**: `T1_siso_no_spf.csv`
+- **Metode**: Pengujian otomatis via `python auto_test.py --scenario 1 --duration 10`
 
 | Run | Timestamp | Signal (dB) | Noise (dB) | SNR (dB) | RMS (dBFS) | Peak Offset (kHz) | Catatan Kondisi |
 |:---:|:---|:---:|:---:|:---:|:---:|:---:|---|
-| #1 | | | | | | | |
-| #2 | | | | | | | |
-| #3 | | | | | | | |
-| **Rata-rata** | | | | | | | |
+| #1 | 2026-09-29T21:12:44 | 51.40 | 39.59 | 11.81 | 2.34 | 101.20 | Lock stabil 100 kHz tone |
+| #2 | 2026-09-29T21:12:48 | 51.10 | 39.55 | 11.55 | 1.96 | 101.20 | Lock stabil 100 kHz tone |
+| #3 | 2026-09-29T21:12:54 | 51.24 | 39.58 | 11.66 | 1.97 | 101.20 | Lock stabil 100 kHz tone |
+| **Rata-rata (11 Sampel)** | **Durasi 10 detik** | **51.26** | **39.55** | **11.72** | **2.00** | **101.20** | **Baseline SISO Valid** |
 
 ---
 
 ### Pengujian 2: SISO dengan SPF5189Z (TX + RX)
-- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-20 dB`, RX Gain: `30 dB`
+- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-10 dB` (atau kurangi jika saturasi), RX Gain: `30 dB`
 - **Output CSV**: `T2_siso_spf_tx_rx.csv`
+- **Metode**: Pasang SPF1 di TX & SPF2 di RX1, lalu jalankan `python auto_test.py --scenario 2 --duration 10`
 
 | Run | Timestamp | Signal (dB) | Noise (dB) | SNR (dB) | RMS (dBFS) | Peak Offset (kHz) | Catatan Kondisi |
 |:---:|:---|:---:|:---:|:---:|:---:|:---:|---|
@@ -100,19 +102,20 @@ Catat setiap percobaan (minimal 3 kali pengulangan) untuk mengantisipasi deviasi
 ---
 
 ### Pengujian 3: MIMO / SIMO Tanpa SPF5189Z (RX1 & RX2)
-- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-20 dB`, RX Gain: `30 dB`
+- **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-10 dB`, RX Gain: `30 dB`
 - **Output CSV**: `T3_simo_no_spf.csv`
+- **Metode**: Pengujian otomatis via `python auto_test.py --scenario 3 --duration 10`
 
 | Run | Kanal | Signal (dB) | Noise (dB) | SNR (dB) | RMS (dBFS) | Peak Offset (kHz) | Catatan Balance RX1/RX2 |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| #1 | RX1 | | | | | | |
-| | RX2 | | | | | | |
-| #2 | RX1 | | | | | | |
-| | RX2 | | | | | | |
-| #3 | RX1 | | | | | | |
-| | RX2 | | | | | | |
-| **Rata-rata** | **RX1** | | | | | | |
-| | **RX2** | | | | | | |
+| #1 | RX1 | 50.62 | 39.50 | 11.13 | 1.97 | 101.20 | Lock stabil 100 kHz |
+| | RX2 | 54.12 | 39.80 | 14.33 | 2.36 | 101.20 | Lock stabil 100 kHz |
+| #2 | RX1 | 51.34 | 39.41 | 11.93 | 1.79 | 101.20 | Konsisten dengan SISO |
+| | RX2 | 54.28 | 39.64 | 14.65 | 2.37 | 101.20 | Gain port RX2 +2.9 dB |
+| #3 | RX1 | 51.77 | 39.49 | 12.28 | 1.86 | 101.20 | Konsisten |
+| | RX2 | 54.25 | 39.75 | 14.50 | 2.33 | 101.20 | Konsisten |
+| **Rata-rata (11 Sampel)** | **RX1** | **51.29** | **39.45** | **11.84** | **1.86** | **101.20** | **Deviasi vs SISO < 0.1 dB** |
+| | **RX2** | **54.26** | **39.73** | **14.53** | **2.34** | **101.20** | **Delta RX2-RX1 = +2.69 dB SNR** |
 
 ---
 
@@ -140,40 +143,64 @@ Pastikan lingkungan virtual telah aktif sebelum menjalankan:
 source venv/bin/activate
 ```
 
-### Skenario 1 — SISO Tanpa SPF
-```bash
-# Terminal 1 (TX - Pluto #2):
-python tx.py --uri ip:192.168.2.11 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -20 --tone 100e3
+### Cara Praktis: Otomasi End-to-End (`auto_test.py`)
 
-# Terminal 2 (RX - Pluto #1):
-python rx_test.py --uri ip:192.168.2.10 --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 1 --duration 60 --csv T1_siso_no_spf.csv
+Gunakan script otomasi `auto_test.py` dari laptop. Script ini secara otomatis menyalakan TX via SSH di `root@aml.local`, menjalankan pengukuran RX di laptop, menghitung rata-rata, menyimpan CSV, dan mematikan TX secara aman saat selesai:
+
+```bash
+# Skenario 1 (SISO Baseline, 10 detik):
+python auto_test.py --scenario 1 --duration 10
+
+# Skenario 2 (SISO dengan SPF TX + RX, 10 detik):
+python auto_test.py --scenario 2 --duration 10
+
+# Skenario 3 (SIMO / Dual RX Baseline, 10 detik):
+python auto_test.py --scenario 3 --duration 10
+
+# Skenario 4 (SIMO dengan SPF RX1 + RX2, 10 detik):
+python auto_test.py --scenario 4 --duration 10
 ```
 
-### Skenario 2 — SISO dengan SPF (TX + RX)
+---
+
+### Cara Manual (Dua Terminal Terpisah)
+
+Jika ingin menjalankan secara manual:
+
+#### Skenario 1 — SISO Tanpa SPF
+```bash
+# Terminal 1 (TX - Pluto #2 via SSH aml.local):
+python tx.py --uri ip:192.168.99.240 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -10 --tone 100e3
+
+# Terminal 2 (RX - Pluto #1 di Laptop):
+python rx_test.py --uri usb: --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 1 --duration 10 --csv T1_siso_no_spf.csv
+```
+
+#### Skenario 2 — SISO dengan SPF (TX + RX)
 ```bash
 # Terminal 1 (TX - Pluto #2 -> SPF #1):
-python tx.py --uri ip:192.168.2.11 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -20 --tone 100e3
+python tx.py --uri ip:192.168.99.240 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -10 --tone 100e3
 
 # Terminal 2 (SPF #2 -> Pluto #1 RX1):
-python rx_test.py --uri ip:192.168.2.10 --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 1 --duration 60 --csv T2_siso_spf_tx_rx.csv
+python rx_test.py --uri usb: --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 1 --duration 10 --csv T2_siso_spf_tx_rx.csv
 ```
 
-### Skenario 3 — MIMO Tanpa SPF
+#### Skenario 3 — MIMO / SIMO Tanpa SPF
 ```bash
-# Terminal 1 (TX - Pluto #2):
-python tx.py --uri ip:192.168.2.11 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -20 --tone 100e3
+# Terminal 1 (TX - Pluto #2 via SSH aml.local):
+python tx.py --uri ip:192.168.99.240 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -10 --tone 100e3
 
-# Terminal 2 (Pluto #1 RX1 + RX2):
-python rx_test.py --uri ip:192.168.2.10 --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 2 --duration 60 --csv T3_simo_no_spf.csv
+# Terminal 2 (Pluto #1 RX1 + RX2 di Laptop):
+python rx_test.py --uri usb: --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 2 --duration 10 --csv T3_simo_no_spf.csv
 ```
 
-### Skenario 4 — MIMO dengan SPF (RX1 + RX2)
+#### Skenario 4 — MIMO / SIMO dengan SPF (RX1 + RX2)
 ```bash
-# Terminal 1 (TX - Pluto #2):
-python tx.py --uri ip:192.168.2.11 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -20 --tone 100e3
+# Terminal 1 (TX - Pluto #2 via SSH aml.local):
+python tx.py --uri ip:192.168.99.240 --freq 434e6 --bw 1e6 --sample-rate 2e6 --tx-gain -10 --tone 100e3
 
-# Terminal 2 (Pluto #1 RX1[SPF1] + RX2[SPF2]):
-python rx_test.py --uri ip:192.168.2.10 --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 2 --duration 60 --csv T4_simo_spf_rx1_rx2.csv
+# Terminal 2 (Pluto #1 RX1[SPF1] + RX2[SPF2] di Laptop):
+python rx_test.py --uri usb: --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 30 --rx-channels 2 --duration 10 --csv T4_simo_spf_rx1_rx2.csv
 ```
 
 ---

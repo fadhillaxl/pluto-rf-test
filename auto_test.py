@@ -52,12 +52,12 @@ SCENARIO_CONFIG = {
 def stop_remote_tx(remote_host, remote_dir):
     """Menghentikan proses tx.py pada SBC remote."""
     cmd = [
-        "ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
+        "ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
         remote_host,
         f"killall -9 python 2>/dev/null || pkill -f 'tx.py' 2>/dev/null || true"
     ]
     try:
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
     except Exception as e:
         print(f"[Warning] Gagal menghentikan remote TX: {e}", file=sys.stderr)
 
