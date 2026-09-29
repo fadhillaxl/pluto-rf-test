@@ -59,8 +59,10 @@ def main():
     sdr.tx_cyclic_buffer = True
     sdr.tx_buffer_size = args.buffer
 
-    # Tone amplitude 0.25 leaves substantial digital headroom.
-    data = 0.25 * tone_iq(args.sample_rate, args.tone, args.buffer)
+    # Pluto DAC expects signed 16-bit integer values (full scale 2**14 = 16384).
+    # Scale with 0.5 leaves 6 dB of digital headroom before DAC saturation.
+    dac_scale = float(2**14) * 0.5
+    data = dac_scale * tone_iq(args.sample_rate, args.tone, args.buffer)
 
     print("\n=== Pluto TX ===")
     print(f"URI          : {args.uri}")
