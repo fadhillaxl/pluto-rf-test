@@ -3,6 +3,8 @@ rf_config.py
 Helper for loading SDR and RF test configurations from .config, .comfig, or config.ini.
 """
 
+from __future__ import annotations
+
 import configparser
 import os
 import re
@@ -82,7 +84,7 @@ def find_config_file(custom_path: str = None) -> str:
     return ""
 
 
-def load_config(custom_path: str = None) -> tuple[dict, str]:
+def load_config(custom_path: str = None) -> tuple:
     """
     Load configuration from file.
     Returns (dict_of_defaults, config_file_path_or_empty).
