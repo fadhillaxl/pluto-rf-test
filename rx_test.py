@@ -88,6 +88,67 @@ def measure_channel(samples: np.ndarray, sample_rate: float, tone_hz: float,
     }
 
 
+def combine_mrc(ch1: np.ndarray, ch2: np.ndarray, sample_rate: float, tone_hz: float):
+    """
+    Maximal Ratio Combining (MRC) untuk menggabungkan 2 kanal antena penerima (RX1 + RX2)
+    menjadi 1 sinyal digital dengan SNR optimal (Diversity Combining: 2 RX jadi 1).
+    Tahan terhadap Carrier Frequency Offset (CFO) antara TX dan RX SDR.
+    """
+    x1 = np.asarray(ch1).astype(np.complex64)
+    x2 = np.asarray(ch2).astype(np.complex64)
+    n = min(len(x1), len(x2))
+    x1 = x1[:n] - np.mean(x1[:n])
+    x2 = x2[:n] - np.mean(x2[:n])
+
+    # Gunakan FFT untuk mendeteksi frekuensi dan fasa tone aktual (tahan CFO)
+    win = np.hanning(n)
+    X1 = np.fft.fft(x1 * win)
+    X2 = np.fft.fft(x2 * win)
+    freqs = np.fft.fftfreq(n, 1.0 / sample_rate)
+
+    # Cari peak di sekitar expected tone (+- 20 kHz toleransi CFO)
+    region = np.abs(freqs - tone_hz) <= max(20e3, 5 * sample_rate / n)
+    if not np.any(region):
+        region[:] = True
+
+    power1 = np.abs(X1) ** 2
+    idx_peak = np.where(region)[0][np.argmax(power1[region])]
+
+    # Amplitudo & fasa kompleks di peak
+    c1 = X1[idx_peak]
+    c2 = X2[idx_peak]
+
+    # Beda fasa antara RX2 dan RX1: delta_phi = angle(c2) - angle(c1)
+    phase_diff = np.angle(c2) - np.angle(c1)
+
+    # Putar fasa kanal 2 agar sefasa sempurna (koheren) dengan kanal 1
+    x2_aligned = x2 * np.exp(-1j * phase_diff)
+
+    # Estimasi variansi noise dari kedua kanal
+    noise_mask = (np.abs(freqs) > 2e3) & (np.abs(freqs - tone_hz) > 15e3)
+    if not np.any(noise_mask):
+        noise_mask[:] = True
+    var1 = max(float(np.mean(np.abs(X1[noise_mask]) ** 2) / n), 1e-12)
+    var2 = max(float(np.mean(np.abs(X2[noise_mask]) ** 2) / n), 1e-12)
+
+    # Bobot MRC sebanding dengan rasio amplitudo / variansi noise
+    a1 = np.abs(c1)
+    a2 = np.abs(c2)
+    w1 = a1 / var1
+    w2 = a2 / var2
+
+    # Normalisasi bobot agar skala noise gabungan setara rata-rata noise kanal tunggal
+    norm = np.sqrt(w1**2 * var1 + w2**2 * var2)
+    if norm > 1e-12:
+        target_noise_scale = np.sqrt(0.5 * (var1 + var2))
+        w1 = (w1 / norm) * target_noise_scale
+        w2 = (w2 / norm) * target_noise_scale
+
+    # Penjumlahan koheren: sinyal saling memperkuat konstruktif 100%
+    combined = w1 * x1 + w2 * x2_aligned
+    return combined
+
+
 def main():
     pre_parser = argparse.ArgumentParser(add_help=False)
     pre_parser.add_argument("--config", default="", help="Custom config file")
@@ -159,7 +220,7 @@ def main():
     print("\nPress Ctrl+C to stop.\n")
 
     start = time.monotonic()
-    history = {1: []} if args.rx_channels == 1 else {1: [], 2: []}
+    history = {"RX1": []} if args.rx_channels == 1 else {"RX1": [], "RX2": [], "Combined (MRC)": []}
     try:
         while True:
             raw = sdr.rx()
@@ -176,9 +237,10 @@ def main():
                     args.tone,
                     noise_exclusion_hz=max(10e3, 4 * args.sample_rate / args.buffer),
                 )
-                history[idx].append(m)
+                ch_name = f"RX{idx}"
+                history[ch_name].append(m)
                 print(
-                    f"  RX{idx}: "
+                    f"  {ch_name:15}: "
                     f"signal={m['signal_db']:8.2f} dB  "
                     f"noise={m['noise_db']:8.2f} dB  "
                     f"SNR={m['snr_db']:7.2f} dB  "
@@ -190,14 +252,46 @@ def main():
                     writer.writerow({
                         "timestamp": now,
                         "elapsed_s": f"{elapsed:.3f}",
-                        "channel": idx,
+                        "channel": ch_name,
                         "frequency_hz": int(args.freq),
                         "bandwidth_hz": int(args.bw),
                         "sample_rate_hz": int(args.sample_rate),
                         "rx_gain_db": args.rx_gain,
                         **{k: f"{v:.6f}" for k, v in m.items()},
                     })
-                    csv_file.flush()
+
+            # Jika 2 kanal (MIMO/SIMO), hitung dan tampilkan gabungan 2 RX jadi 1 (MRC Diversity)
+            if args.rx_channels == 2 and len(samples) == 2:
+                comb_samples = combine_mrc(samples[0], samples[1], args.sample_rate, args.tone)
+                m_comb = measure_channel(
+                    comb_samples,
+                    args.sample_rate,
+                    args.tone,
+                    noise_exclusion_hz=max(10e3, 4 * args.sample_rate / args.buffer),
+                )
+                history["Combined (MRC)"].append(m_comb)
+                print(
+                    f"  Combined (MRC) : "
+                    f"signal={m_comb['signal_db']:8.2f} dB  "
+                    f"noise={m_comb['noise_db']:8.2f} dB  "
+                    f"SNR={m_comb['snr_db']:7.2f} dB  "
+                    f"RMS={m_comb['rms_dbfs']:7.2f} dBFS  "
+                    f"peak={m_comb['peak_hz']/1e3:8.2f} kHz"
+                )
+                if writer:
+                    writer.writerow({
+                        "timestamp": now,
+                        "elapsed_s": f"{elapsed:.3f}",
+                        "channel": "Combined_MRC",
+                        "frequency_hz": int(args.freq),
+                        "bandwidth_hz": int(args.bw),
+                        "sample_rate_hz": int(args.sample_rate),
+                        "rx_gain_db": args.rx_gain,
+                        **{k: f"{v:.6f}" for k, v in m_comb.items()},
+                    })
+
+            if writer:
+                csv_file.flush()
 
             time.sleep(args.interval)
 
@@ -226,19 +320,28 @@ def print_summary(history: dict, total_elapsed: float, duration_target: float):
     target_str = f" (Target: {duration_target:.0f}s)" if duration_target > 0 else ""
     print(f"Durasi Uji: {total_elapsed:.1f} detik{target_str} | Total Sampel: {sample_count}\n")
 
-    for ch_idx, data in sorted(history.items()):
+    summary_stats = {}
+    for ch_name, data in history.items():
         if not data:
             continue
         sig_avg = float(np.mean([d["signal_db"] for d in data]))
         noise_avg = float(np.mean([d["noise_db"] for d in data]))
         snr_avg = float(np.mean([d["snr_db"] for d in data]))
         rms_avg = float(np.mean([d["rms_dbfs"] for d in data]))
+        summary_stats[ch_name] = {"sig": sig_avg, "noise": noise_avg, "snr": snr_avg, "rms": rms_avg}
 
-        print(f"--- [ Kanal RX{ch_idx} ] ---")
+        header = f"Kanal Gabungan: {ch_name} (2 RX Jadi 1)" if "Combined" in ch_name else f"Kanal {ch_name}"
+        print(f"--- [ {header} ] ---")
         print(f"  • Signal Power Rata-rata : {sig_avg:7.2f} dB  (min: {min(d['signal_db'] for d in data):.2f}, max: {max(d['signal_db'] for d in data):.2f})")
         print(f"  • Noise Floor  Rata-rata : {noise_avg:7.2f} dB  (min: {min(d['noise_db'] for d in data):.2f}, max: {max(d['noise_db'] for d in data):.2f})")
         print(f"  • SNR          Rata-rata : {snr_avg:7.2f} dB  (min: {min(d['snr_db'] for d in data):.2f}, max: {max(d['snr_db'] for d in data):.2f})")
         print(f"  • Level ADC    Rata-rata : {rms_avg:7.2f} dBFS")
+
+        if "Combined" in ch_name and "RX1" in summary_stats and "RX2" in summary_stats:
+            d_rx1 = snr_avg - summary_stats["RX1"]["snr"]
+            d_rx2 = snr_avg - summary_stats["RX2"]["snr"]
+            print(f"  • Diversity Gain vs RX1  : {d_rx1:+6.2f} dB")
+            print(f"  • Diversity Gain vs RX2  : {d_rx2:+6.2f} dB")
         print()
 
     print("=" * 70)

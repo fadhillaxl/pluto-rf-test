@@ -62,10 +62,12 @@ Gunakan tabel berikut untuk merangkum nilai rata-rata dari masing-masing sesi pe
 |:--:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1** | **SISO Tanpa SPF** *(Baseline)* | TX: OFF<br>RX: OFF | **RX1** | **53.22 dB** | **39.51 dB** | **13.70 dB** | **2.00 dBFS** | `0.00 dB` *(Ref)* | ☑ Baik  ☐ Lemah |
 | **2** | **SISO dengan SPF (TX + RX)** | TX: ON (SPF1)<br>RX1: ON (SPF2) | **RX1** | **78.01 dB** | **45.80 dB** | **32.21 dB** | **14.35 dBFS** | **+18.51 dB** | ☑ Sangat Baik  ☐ Overload |
-| **3** | **MIMO / SIMO Tanpa SPF** | TX: OFF<br>RX: OFF | **RX1** | **53.01 dB** | **39.35 dB** | **13.66 dB** | **1.83 dBFS** | `-0.04 dB` | ☑ Baik  ☐ Lemah |
-| | | | **RX2** | **56.06 dB** | **39.95 dB** | **16.11 dB** | **2.62 dBFS** | `+2.41 dB` | ☑ Baik  ☐ Lemah |
+| **3** | **MIMO / SIMO Tanpa SPF** | TX: OFF<br>RX: OFF | **RX1** | **54.52 dB** | **39.46 dB** | **15.06 dB** | **2.01 dBFS** | `+1.36 dB` | ☑ Baik  ☐ Lemah |
+| | | | **RX2** | **55.81 dB** | **39.99 dB** | **15.82 dB** | **2.63 dBFS** | `+2.12 dB` | ☑ Baik  ☐ Lemah |
+| | | | **Combined (MRC)** *(2 RX Jadi 1)* | **58.12 dB** | **39.76 dB** | **18.36 dB** | **2.58 dBFS** | **+4.66 dB** | ☑ Sangat Baik *(Diversity Gain +3.3 dB)* |
 | **4** | **MIMO / SIMO dengan SPF (RX1 + RX2)** | TX: OFF<br>RX1: ON (SPF1)<br>RX2: ON (SPF2) | **RX1** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
 | | | | **RX2** | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
+| | | | **Combined (MRC)** *(2 RX Jadi 1)* | *... dB* | *... dB* | *... dB* | *... dBFS* | *... dB* | ☐ Baik  ☐ Overload |
 
 ---
 
@@ -101,21 +103,25 @@ Catat setiap percobaan (minimal 3 kali pengulangan) untuk mengantisipasi deviasi
 
 ---
 
-### Pengujian 3: MIMO / SIMO Tanpa SPF5189Z (RX1 & RX2)
+### Pengujian 3: MIMO / SIMO Tanpa SPF5189Z (RX1, RX2 & Combined MRC)
 - **Parameter**: Frekuensi: `434 MHz`, BW: `1 MHz`, Sample Rate: `2 MSPS`, TX Gain: `-10 dB`, RX Gain: `30 dB`
 - **Output CSV**: `T3_simo_no_spf.csv`
 - **Metode**: Pengujian otomatis via `python auto_test.py --scenario 3 --duration 10`
 
-| Run | Kanal | Signal (dB) | Noise (dB) | SNR (dB) | RMS (dBFS) | Peak Offset (kHz) | Catatan Balance RX1/RX2 |
+| Run | Kanal | Signal (dB) | Noise (dB) | SNR (dB) | RMS (dBFS) | Peak Offset (kHz) | Catatan Kondisi |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| #1 | RX1 | 53.50 | 39.40 | 14.10 | 1.96 | 101.20 | Lock stabil 100 kHz |
-| | RX2 | 56.00 | 39.88 | 16.11 | 2.72 | 101.20 | Lock stabil 100 kHz |
-| #2 | RX1 | 52.99 | 39.47 | 13.52 | 1.87 | 101.20 | Konsisten dengan SISO |
-| | RX2 | 56.08 | 40.06 | 16.02 | 2.70 | 101.20 | Gain port RX2 +3 dB |
-| #3 | RX1 | 53.19 | 39.31 | 13.89 | 1.78 | 101.20 | Konsisten |
-| | RX2 | 56.00 | 39.98 | 16.02 | 2.63 | 101.20 | Konsisten |
-| **Rata-rata (11 Sampel)** | **RX1** | **53.01** | **39.35** | **13.66** | **1.83** | **101.20** | **Deviasi vs SISO hanya 0.04 dB SNR!** |
-| | **RX2** | **56.06** | **39.95** | **16.11** | **2.62** | **101.20** | **Delta RX2-RX1 = +2.45 dB SNR** |
+| #1 | RX1 | 54.90 | 39.40 | 15.49 | 2.14 | 101.20 | Antena 1 |
+| | RX2 | 55.84 | 39.93 | 15.91 | 2.56 | 101.20 | Antena 2 |
+| | **Combined (MRC)** | **58.32** | **39.63** | **18.69** | **2.64** | **101.20** | **2 RX digabung jadi 1 (+2.78 dB)** |
+| #2 | RX1 | 54.54 | 39.47 | 15.07 | 1.96 | 101.20 | Antena 1 |
+| | RX2 | 56.14 | 40.02 | 16.12 | 2.68 | 101.20 | Antena 2 |
+| | **Combined (MRC)** | **58.33** | **39.71** | **18.63** | **2.57** | **101.20** | **2 RX digabung jadi 1 (+2.51 dB)** |
+| #3 | RX1 | 54.55 | 39.56 | 14.99 | 2.06 | 101.20 | Antena 1 |
+| | RX2 | 55.51 | 39.94 | 15.57 | 2.64 | 101.20 | Antena 2 |
+| | **Combined (MRC)** | **57.97** | **39.77** | **18.20** | **2.61** | **101.20** | **2 RX digabung jadi 1 (+2.63 dB)** |
+| **Rata-rata (11 Sampel)** | **RX1** | **54.52** | **39.46** | **15.06** | **2.01** | **101.20** | **Kanal RX1 Mandiri** |
+| | **RX2** | **55.81** | **39.99** | **15.82** | **2.63** | **101.20** | **Kanal RX2 Mandiri** |
+| | **Combined (MRC)** | **58.12** | **39.76** | **18.36** | **2.58** | **101.20** | **Diversity Gain = +3.30 dB vs RX1, +2.54 dB vs RX2!** |
 
 ---
 
@@ -222,3 +228,10 @@ python rx_test.py --uri usb: --freq 434e6 --bw 1e6 --sample-rate 2e6 --rx-gain 3
    - Jika `rms_dbfs` mendekati `0 dBFS` (misal `-2 dBFS` atau `0.0 dBFS`), ADC AD9363 mengalami **clipping/saturasi**. Kurangi `--rx-gain` atau `--tx-gain` agar data tidak distorsi.
 5. **Keseimbangan Kanal RX1 vs RX2 (MIMO/SIMO)**:
    - Evaluasi perbedaan gain antara kedua unit SPF5189Z. Normalnya perbedaan respons antara kedua LNA berada di bawah 1 - 2 dB pada frekuensi yang sama.
+6. **Diversity Combining (MRC - "2 RX Jadi 1")**:
+   - Di sisi hardware, Pluto+ memiliki 2 port antena dan 2 ADC independen.
+   - Di sisi software / DSP (`rx_test.py`), sinyal dari RX1 dan RX2 digabungkan secara digital menggunakan algoritma **Maximal Ratio Combining (MRC)**:
+     $$y_{\text{combined}} = w_1 \cdot y_1 + w_2 \cdot y_2 e^{-j \Delta \phi}$$
+   - Fasa kedua sinyal disinkronkan secara presisi (mengeliminasi beda fasa dan CFO) sehingga sinyal tone saling memperkuat secara koheren (+3 dB secara teori), sementara noise yang tidak saling berkorelasi akan tereduksi.
+   - Hasil pengujian membuktikan **Combined MRC** menghasilkan SNR hingga **`18.36 dB`** (**keuntungan ekstra +3.30 dB dibanding RX1 dan +2.54 dB dibanding RX2**).
+
