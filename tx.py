@@ -46,7 +46,10 @@ def main():
         raise SystemExit("--tone must be below sample-rate/2")
 
     print(f"Connecting to Pluto TX: {args.uri}")
-    sdr = adi.Pluto(args.uri)
+    try:
+        sdr = adi.ad9361(args.uri)
+    except Exception:
+        sdr = adi.Pluto(args.uri)
 
     sdr.tx_enabled_channels = [0]
     sdr.tx_lo = int(args.freq)
